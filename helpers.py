@@ -119,7 +119,7 @@ def get_price_gohm():
 def get_circulating_supply():
     data = get_data(constants.SUBGRAPH_URL,constants.TOKEN_SUPPLY_QUERY, True)
     tokens = data['data']['tokenSupplies']
-    non_liq_tkns = list(filter(lambda x: x['type'] != "Liquidity", tokens))
+    non_liq_tkns = list(filter(lambda x: x['type'] != "Liquidity" and x['type'] != "Lending" and x['type'] != "OHM Bonds (Vesting Tokens)", tokens))
     
     return sum(float(tkn['supplyBalance']) for tkn in non_liq_tkns)
 

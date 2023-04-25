@@ -159,7 +159,7 @@ class SentinelDiscordBot:
     
         await ctx.send("Added {} to {} users".format(role,count))
 
-    async def _sususers(self, ctx, role: discord.Role):
+    async def _sususers(self, ctx):
         if not self.role_check(ctx.author.roles, True):
             await ctx.send("You don't have permission to use this command.")
             return

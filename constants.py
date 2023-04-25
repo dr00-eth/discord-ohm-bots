@@ -26,8 +26,16 @@ TOKEN_RECORD_QUERY = "{{tokenRecords( where: {{block: \"{}\"}}) {{ value valueEx
 TOKEN_RECORD_7D_QUERY = get_token_record_7d_query()
 INDEX_PRICE_QUERY = "{{protocolMetrics(first: 1, where: {{block: \"{}\"}}) {{ currentIndex ohmPrice gOhmPrice }}}}"
 STREAK_MESSAGE_SEQUENCE = ['earth', 'fire', 'wind', 'water', 'heart', 'go planet']
-SCAMMER_KEYWORDS = ['mod', 'help desk', 'support', 'dev']
-EXCLUDE_IDS= [828736415013404702, 526240486822903818]
+SCAMMER_KEYWORDS = ['mod', 'help desk', 'support', 'dev', 'mee6', 'shaft', 'relwyn', 'joel_', 'yattep', 'guerrillatrader', 'MEEE6',
+                     'ầ', 'ợ', 'ị', '𝐂', '𝐚', '𝐩', '𝐭', '𝐡', '𝐎', '𝐦', '𝐲', '𝐮', '𝐥', '𝚕', '𝘴', '𝘶', '𝘱', '𝘖', '𝘺', '𝐎', 'hohmward',
+                     'Z|Range, Bound|', 'Wartull', 'spoys P', 'Hermes', 'ReIwyn', 'gueriIIatrader', 'WartuII', 'joeI_', 'support ticket',
+                     'mee6', 'sentinel', 'support', 'dr00', 'drOO', 'zeus']
+##Excluded IDs (IN ORDER) Dr00, yattep, Z. hohmward, relwyn, guerillatrader,
+##                        shaft, wartull, zeus, apollonius, joel, spoys P,
+##                        mee6 bot, sentinel bot, hermes bot
+EXCLUDE_IDS= [828736415013404702, 526240486822903818, 855229180567355422, 894321349210820618, 215990494197448704, 883022147742752820,
+              804035483494645771, 299261433961512960, 383712533300641793, 407997042816974848, 220200518834716673, 915007255655612496,
+              159985870458322944, 985951550667128863, 470723870270160917]
 ADMIN_ROLE = "Scholars"
 INTERN_ROLE = "Intern"
 GRASSHOPPER = "Grasshoppers"

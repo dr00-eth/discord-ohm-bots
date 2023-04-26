@@ -32,7 +32,7 @@ class OhmIndexDiscordBot:
         await ctx.send("Happy to report it has been updated!")
 
     async def _fixpresence(self, ctx):
-        if not self.role_check(ctx.author.roles):
+        if not await self.role_check(ctx.author.roles):
             await ctx.send("You don't have permission to use this command.")
             return
         for guild in self.bot.guilds:

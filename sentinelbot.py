@@ -104,7 +104,7 @@ class SentinelDiscordBot:
 
 
     async def _masskick(self, ctx, role: discord.Role):
-        if not self.role_check(ctx.author.roles):
+        if not await self.role_check(ctx.author.roles):
             await ctx.send("You don't have permission to use this command.")
             return
         total = len(role.members)
@@ -130,7 +130,7 @@ class SentinelDiscordBot:
         await ctx.message.reply(f"kicked {total} users in given role.")  # let user know
 
     async def _listzero(self, ctx, role: discord.Role):
-        if not self.role_check(ctx.author.roles):
+        if not await self.role_check(ctx.author.roles):
             await ctx.send("You don't have permission to use this command.")
             return
         members = filter(lambda m: len(m.roles) == 1, role.members)
@@ -140,7 +140,7 @@ class SentinelDiscordBot:
             await ctx.send("No members found")
 
     async def _bulkrole(self, ctx, role: discord.Role, *users):
-        if not self.role_check(ctx.author.roles):
+        if not await self.role_check(ctx.author.roles):
             await ctx.send("You don't have permission to use this command.")
             return
         guild = self.bot.get_guild(ctx.guild.id)
@@ -160,7 +160,7 @@ class SentinelDiscordBot:
         await ctx.send("Added {} to {} users".format(role,count))
 
     async def _sususers(self, ctx):
-        if not self.role_check(ctx.author.roles, True):
+        if not await self.role_check(ctx.author.roles, True):
             await ctx.send("You don't have permission to use this command.")
             return
 

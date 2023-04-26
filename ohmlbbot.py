@@ -30,7 +30,7 @@ class OhmLiquidBackingDiscordBot:
 
     async def _forceupdate(self, ctx):
         try:
-            if not self.role_check(ctx.author.roles):
+            if not await self.role_check(ctx.author.roles):
                 await ctx.send("You don't have permission to use this command.")
                 return
             await ctx.send("Yes ser, on it boss.")
@@ -45,7 +45,7 @@ class OhmLiquidBackingDiscordBot:
             traceback.print_exc()
 
     async def _fixpresence(self, ctx):
-        if not self.role_check(ctx.author.roles):
+        if not await self.role_check(ctx.author.roles):
             await ctx.send("You don't have permission to use this command.")
             return
         for guild in self.bot.guilds:

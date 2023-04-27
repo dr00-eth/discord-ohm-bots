@@ -149,7 +149,7 @@ def get_supply_data(url, include_types_circulating, include_types_floating):
 
 
 def get_circulating_supply():
-    # Define the types of tokens to exclude for calculating the circulating supply
+    # Define the types of tokens to include for calculating the circulating supply
     include_types_circulating = [TokenType.TYPE_TOTAL_SUPPLY, TokenType.TYPE_TREASURY, TokenType.TYPE_OFFSET, TokenType.TYPE_BONDS_PREMINTED,
                                  TokenType.TYPE_BONDS_VESTING_DEPOSITS, TokenType.TYPE_BONDS_DEPOSITS, TokenType.TYPE_BOOSTED_LIQUIDITY_VAULT]
 
@@ -167,7 +167,7 @@ def get_circulating_supply():
 
 
 def get_floating_supply():
-    # Define the types of tokens to exclude for calculating the floating supply
+    # Define the types of tokens to include for calculating the floating supply
     include_types_floating = [TokenType.TYPE_TOTAL_SUPPLY, TokenType.TYPE_TREASURY, TokenType.TYPE_OFFSET, TokenType.TYPE_BONDS_PREMINTED,
                               TokenType.TYPE_BONDS_VESTING_DEPOSITS, TokenType.TYPE_BONDS_DEPOSITS, TokenType.TYPE_BOOSTED_LIQUIDITY_VAULT, TokenType.TYPE_LIQUIDITY]
 
@@ -220,8 +220,9 @@ def get_current_day_lb():
 
 
 def get_7d_floating_supply():
-    # Define the types of tokens to exclude for calculating the floating supply
-    exclude_types_floating = ["OHM Bonds (Vesting Tokens)", "Lending"]
+    # Define the types of tokens to include for calculating the floating supply
+    include_types_floating = [TokenType.TYPE_TOTAL_SUPPLY, TokenType.TYPE_TREASURY, TokenType.TYPE_OFFSET, TokenType.TYPE_BONDS_PREMINTED,
+                              TokenType.TYPE_BONDS_VESTING_DEPOSITS, TokenType.TYPE_BONDS_DEPOSITS, TokenType.TYPE_BOOSTED_LIQUIDITY_VAULT, TokenType.TYPE_LIQUIDITY]
 
     # Create a dictionary to store the sum of supplyBalance values for each date
     aggregated_data = {}
@@ -235,8 +236,8 @@ def get_7d_floating_supply():
 
         # Loop through the tokenSupplies array
         for token_supply in data:
-            # Check if the type is not in the exclude_types_floating list
-            if token_supply['type'] not in exclude_types_floating:
+            # Check if the type is in the include_types_floating list
+            if token_supply['type'] in include_types_floating:
                 # Convert the supplyBalance string to a float
                 supply_balance = float(token_supply['supplyBalance'])
                 date = token_supply['date']

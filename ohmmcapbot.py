@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 from discord.ext import tasks
-from helpers import human_format, get_price_ohm, get_circulating_supply
+from helpers import human_format, get_price_ohm, get_circulating_supply_eth, get_circulating_supply_arbi
 import traceback
 
 class OhmMarketCapDiscordBot:
@@ -66,8 +66,9 @@ class OhmMarketCapDiscordBot:
     async def get_ohm_mcap(self):
         try:
             price = get_price_ohm()
-            circ_supply = get_circulating_supply()
-            mcap = price * circ_supply
+            circ_supply_eth = get_circulating_supply_eth()
+            circ_supply_arbi = get_circulating_supply_arbi()
+            mcap = price * (circ_supply_eth + circ_supply_arbi)
             name_val = human_format(float(mcap))
             self.lastval = name_val
             return name_val

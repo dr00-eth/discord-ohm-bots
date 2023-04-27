@@ -1,6 +1,7 @@
+from constants import GOhm
 import requests
 import constants
-from constants import TokenType
+from constants import TokenType, GOhm, Ohm
 import json
 import io
 import numpy as np
@@ -207,6 +208,16 @@ def get_lb_total():
     return total_lb
 
 
+def get_token_multiplier(token):
+    # Check if the provided token address is one of the addresses defined in the GOhm class
+    if token.lower() in (gohm.value.lower() for gohm in GOhm):
+        # Define the multiplier for the token (replace 1.0 with the actual multiplier value)
+        multiplier = get_raw_index()
+        return float(multiplier)
+    else:
+        return float(1)
+
+
 def get_current_day_lb():
 
     # Initialize the total floating supply
@@ -226,24 +237,39 @@ def get_7d_floating_supply():
 
     # Create a dictionary to store the sum of supplyBalance values for each date
     aggregated_data = {}
+    # Variable to store the highest date from the first iteration (Mainnet)
+    highest_date = None
 
-    # Iterate over the subgraph URLs and calculate the 7-day floating supply
-    for url in constants.SUBGRAPH_URLS:
+    # Iterate over the subgraph URLs and calculate the 7-day floating supply for each network
+    for index, url in enumerate(constants.SUBGRAPH_URLS):
         data = get_data(url, constants.get_token_supply_7d_query())
-        # Get data from the highest block per day
+        # Get data from the highest block per day to eliminate partial indexing
         data = get_records_with_highest_block(
             data, constants.DataType.TOKEN_SUPPLIES)
 
+        # Create a set to keep track of unique dates in the current iteration
+        current_dates = set()
         # Loop through the tokenSupplies array
         for token_supply in data:
-            # Check if the type is in the include_types_floating list
+            # Check if the type is in the include_types_floating list above
             if token_supply['type'] in include_types_floating:
-                # Convert the supplyBalance string to a float
-                supply_balance = float(token_supply['supplyBalance'])
+                # Convert the supplyBalance string to a float and check if gOHM for multiplier
+                supply_balance = float(
+                    token_supply['supplyBalance']) * get_token_multiplier(token_supply['tokenAddress'])
                 date = token_supply['date']
                 # Add the supplyBalance value to the aggregated data for the date
                 aggregated_data[date] = aggregated_data.get(
                     date, 0) + supply_balance
+                # Add the date to the current_dates set
+                current_dates.add(date)
+
+        # If this is the first iteration, store the highest date for mainnet
+        if index == 0:
+            highest_date = max(current_dates)
+        # If this is the second iteration, check if the highest date is present
+        elif index == 1 and highest_date not in current_dates:
+            # Remove the highest date from the aggregated data
+            aggregated_data.pop(highest_date, None)
 
     # Return the sum of supplyBalance values for each date
     return aggregated_data

@@ -15,10 +15,13 @@ PRICE_UPDATE_INTERVAL = 20 # in minutes
 GENERIC_UPDATE_INTERVAL = 10 # in minutes
 LB_UPDATE_INTERVAL = 720 # in minutes
 INDEX_UPDATE_INTERVAL = 360 # in minutes
-SUBGRAPH_URL = 'https://gateway.thegraph.com/api/[api-key]/deployments/id/QmaRGfd56bd3bTaxbKwU6fQ4vmVGTUJwSeXVWMQhfaXEV3'
-ARBI_SUBGRAPH_URL = 'https://api.thegraph.com/subgraphs/name/olympusdao/protocol-metrics-arbitrum'
-POLY_SUBGRAPH_URL = 'https://api.thegraph.com/subgraphs/name/olympusdao/protocol-metrics-polygon'
-FTM_SUBGRAPH_URL = 'https://api.thegraph.com/subgraphs/name/olympusdao/protocol-metrics-fantom'
+ETH_SUBGRAPH_URL = 'https://gateway.thegraph.com/api/[api-key]/deployments/id/QmPCuWLfoH33u699BFwfDEcqaSedhyZpVNk48pQDaS2Kmy'
+SUBGRAPH_URLS = (
+    ETH_SUBGRAPH_URL,  # Ethereum, update above
+    'https://api.thegraph.com/subgraphs/name/olympusdao/protocol-metrics-arbitrum',  # Arbitrum
+    'https://api.thegraph.com/subgraphs/name/olympusdao/protocol-metrics-polygon',  # Polygon
+    'https://api.thegraph.com/subgraphs/name/olympusdao/protocol-metrics-fantom'  # Fantom
+)
 BLOCK_REQUEST_QUERY = {"query": "{ tokenRecords(first: 1, orderBy: block, orderDirection: desc) { block }}"}
 TOKEN_SUPPLY_QUERY = "{{tokenSupplies( where: {{block: \"{}\"}}) {{ type supplyBalance }}}}"
 TOKEN_SUPPLY_7D_QUERY = get_token_supply_7d_query()
@@ -49,3 +52,15 @@ EXPIRATION = 120
 class DataType(Enum):
     TOKEN_RECORDS = 'tokenRecords'
     TOKEN_SUPPLIES = 'tokenSupplies'
+
+class TokenType(Enum):
+    TYPE_BONDS_DEPOSITS = "OHM Bonds (Burnable Deposits)"
+    TYPE_BONDS_PREMINTED = "OHM Bonds (Pre-minted)"
+    TYPE_BONDS_VESTING_DEPOSITS = "OHM Bonds (Vesting Deposits)"
+    TYPE_BONDS_VESTING_TOKENS = "OHM Bonds (Vesting Tokens)"
+    TYPE_BOOSTED_LIQUIDITY_VAULT = "Boosted Liquidity Vault"
+    TYPE_LENDING = "Lending"
+    TYPE_LIQUIDITY = "Liquidity"
+    TYPE_OFFSET = "Manual Offset"
+    TYPE_TOTAL_SUPPLY = "Total Supply"
+    TYPE_TREASURY = "Treasury"

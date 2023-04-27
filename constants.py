@@ -17,7 +17,7 @@ LB_UPDATE_INTERVAL = 720 # in minutes
 INDEX_UPDATE_INTERVAL = 360 # in minutes
 ETH_SUBGRAPH_URL = 'https://gateway.thegraph.com/api/[api-key]/deployments/id/QmPCuWLfoH33u699BFwfDEcqaSedhyZpVNk48pQDaS2Kmy'
 SUBGRAPH_URLS = (
-    'https://gateway.thegraph.com/api/[api-key]/deployments/id/QmPCuWLfoH33u699BFwfDEcqaSedhyZpVNk48pQDaS2Kmy',  # Ethereum
+    ETH_SUBGRAPH_URL,  # Ethereum, update above
     'https://api.thegraph.com/subgraphs/name/olympusdao/protocol-metrics-arbitrum',  # Arbitrum
     'https://api.thegraph.com/subgraphs/name/olympusdao/protocol-metrics-polygon',  # Polygon
     'https://api.thegraph.com/subgraphs/name/olympusdao/protocol-metrics-fantom'  # Fantom

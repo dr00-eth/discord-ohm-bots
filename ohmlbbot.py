@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 from discord.ext import tasks
-from helpers import human_format, get_7d_agg_token_supplies, get_current_day_lb, get_7d_lb_sma, get_7d_agg_token_values, get_7d_lb_sma_raw
+from helpers import human_format, get_7d_floating_supply, get_current_day_lb, get_7d_lb_sma, get_7d_token_values, get_7d_lb_sma_raw
 import constants
 import traceback
 
@@ -62,7 +62,7 @@ class OhmLiquidBackingDiscordBot:
     async def _getrawfloating(self, ctx):
         try:
             await ctx.send("Yes ser, on it boss.")
-            data = get_7d_agg_token_supplies()
+            data = get_7d_floating_supply()
             embed = discord.Embed(title="7 Day Floating Supply", color=discord.Color.blue())
             for k, v in data.items():
                 embed.add_field(name=k, value="{:,}".format(v), inline=False)
@@ -90,7 +90,7 @@ class OhmLiquidBackingDiscordBot:
     async def _getrawtokens(self, ctx):
         try:
             await ctx.send("Yes ser, on it boss.")
-            data = get_7d_agg_token_values()
+            data = get_7d_token_values()
             embed = discord.Embed(title="7 Day Token Values", color=discord.Color.blue())
             for k, v in data.items():
                 embed.add_field(name=k, value=f"${v:,.2f}", inline=False)

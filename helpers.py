@@ -7,17 +7,24 @@ import os
 from datetime import datetime
 ## HELPERS
 
-def get_data(url, queryFormat, construct = False):
+def get_data(url, queryFormat, construct=False):
     if construct:
-        query = { "query": queryFormat.format(get_latest_block(url)) }
+        query = {"query": queryFormat.format(get_latest_block(url))}
     else:
         query = queryFormat
-    ## TODO: will need to update this logic if other endpoints have diff keys
-    if "[api-key]" in url:
-        url = url.replace('[api-key]', os.environ['SUBGRAPH_API_KEY'])
-    raw = requests.post(url, json = query)
+
+    # Replace the API key if present in the URL
+    api_key = os.environ.get('SUBGRAPH_API_KEY')
+    if api_key and "[api-key]" in url:
+        url = url.replace('[api-key]', api_key)
+
+    raw = requests.post(url, json=query)
     raw_json = json.loads(raw.text)
     return raw_json
+
+def get_latest_block(url):
+    data = get_data(url, constants.BLOCK_REQUEST_QUERY)
+    return data['data']['tokenRecords'][0]['block']
 
 def get_image_data(image_url):
     response = requests.get(image_url)
@@ -94,204 +101,148 @@ def aggregate_tkn_vals(data):
   # return the sum of supplyBalance values for each date
     return aggregated_data
 
-def get_latest_block(url):
-    if url == constants.SUBGRAPH_URL:
-      data = get_data(constants.SUBGRAPH_URL, constants.BLOCK_REQUEST_QUERY)
-    elif url == constants.ARBI_SUBGRAPH_URL:
-      data = get_data(constants.ARBI_SUBGRAPH_URL, constants.BLOCK_REQUEST_QUERY)
-    elif url == constants.POLY_SUBGRAPH_URL:
-      data = get_data(constants.POLY_SUBGRAPH_URL, constants.BLOCK_REQUEST_QUERY)
-    else:
-      data = get_data(constants.FTM_SUBGRAPH_URL, constants.BLOCK_REQUEST_QUERY)
-    
-    return data['data']['tokenRecords'][0]['block']
-
 def get_price_ohm():
-    data = get_data(constants.SUBGRAPH_URL, constants.INDEX_PRICE_QUERY, True)
+    data = get_data(constants.ETH_SUBGRAPH_URL, constants.INDEX_PRICE_QUERY, True)
     
     return float(data["data"]["protocolMetrics"][0]["ohmPrice"])
 
 def get_price_gohm():
-    data = get_data(constants.SUBGRAPH_URL, constants.INDEX_PRICE_QUERY, True)
+    data = get_data(constants.ETH_SUBGRAPH_URL, constants.INDEX_PRICE_QUERY, True)
     
     return float(data["data"]["protocolMetrics"][0]["gOhmPrice"])
 
-def get_circulating_supply_eth():
-    data = get_data(constants.SUBGRAPH_URL,constants.TOKEN_SUPPLY_QUERY, True)
+def get_supply_data(url, exclude_types_circulating, exclude_types_floating):
+    data = get_data(url, constants.TOKEN_SUPPLY_QUERY, True)
     tokens = data['data']['tokenSupplies']
-    non_liq_tkns = list(filter(lambda x: x['type'] != "Liquidity" and x['type'] != "Lending" and x['type'] != "OHM Bonds (Vesting Tokens)", tokens))
     
-    return sum(float(tkn['supplyBalance']) for tkn in non_liq_tkns)
+    # Filter tokens based on the provided exclusion lists, if they are not None
+    if exclude_types_circulating is not None:
+        circulating_tokens = list(filter(lambda x: x['type'] not in exclude_types_circulating, tokens))
+        circulating_supply = sum(float(tkn['supplyBalance']) for tkn in circulating_tokens)
+    else:
+        circulating_supply = 0
 
-def get_floating_supply_eth():
-    data = get_data(constants.SUBGRAPH_URL,constants.TOKEN_SUPPLY_QUERY, True)
-    tokens = data['data']['tokenSupplies']
-    tokens = list(filter(lambda x: x['type'] != "OHM Bonds (Vesting Tokens)" and x['type'] != "Lending", tokens))
+    if exclude_types_floating is not None:
+        floating_tokens = list(filter(lambda x: x['type'] not in exclude_types_floating, tokens))
+        floating_supply = sum(float(tkn['supplyBalance']) for tkn in floating_tokens)
+    else:
+        floating_supply = 0
     
-    return sum(float(tkn['supplyBalance']) for tkn in tokens)
+    return circulating_supply, floating_supply
 
-def get_circulating_supply_arbi():
-    data = get_data(constants.ARBI_SUBGRAPH_URL,constants.TOKEN_SUPPLY_QUERY, True)
-    tokens = data['data']['tokenSupplies']
-    non_liq_tkns = list(filter(lambda x: x['type'] != "Liquidity" and x['type'] != "Lending" and x['type'] != "OHM Bonds (Vesting Tokens)", tokens))
-    
-    return sum(float(tkn['supplyBalance']) for tkn in non_liq_tkns)
+def get_circulating_supply():
+    # Define the types of tokens to exclude for calculating the circulating supply
+    exclude_types_circulating = ["Liquidity", "Lending", "OHM Bonds (Vesting Tokens)"]
 
-def get_floating_supply_arbi():
-    data = get_data(constants.ARBI_SUBGRAPH_URL,constants.TOKEN_SUPPLY_QUERY, True)
-    tokens = data['data']['tokenSupplies']
-    tokens = list(filter(lambda x: x['type'] != "OHM Bonds (Vesting Tokens)" and x['type'] != "Lending", tokens))
-    
-    return sum(float(tkn['supplyBalance']) for tkn in tokens)
+    # Initialize the total circulating supply
+    total_circulating_supply = 0
+
+    # Iterate over the subgraph URLs and calculate the total circulating supply
+    for url in constants.SUBGRAPH_URLS:
+        # Get supply data for each subgraph URL (floating supply is not needed here)
+        circulating_supply, _ = get_supply_data(url, exclude_types_circulating, None)
+        total_circulating_supply += circulating_supply
+
+    return total_circulating_supply
+
+def get_floating_supply():
+    # Define the types of tokens to exclude for calculating the floating supply
+    exclude_types_floating = ["OHM Bonds (Vesting Tokens)", "Lending"]
+
+    # Initialize the total floating supply
+    total_floating_supply = 0
+
+    # Iterate over the subgraph URLs and calculate the total floating supply
+    for url in constants.SUBGRAPH_URLS:
+        # Get supply data for each subgraph URL (circulating supply is not needed here)
+        _, floating_supply = get_supply_data(url, None, exclude_types_floating)
+        total_floating_supply += floating_supply
+
+    return total_floating_supply
 
 def get_raw_index():
-    data = get_data(constants.SUBGRAPH_URL, constants.INDEX_PRICE_QUERY, True)
+    data = get_data(constants.ETH_SUBGRAPH_URL, constants.INDEX_PRICE_QUERY, True)
     
     return data["data"]["protocolMetrics"][0]["currentIndex"]
 
-def get_lb_total_eth():
-    data = get_data(constants.SUBGRAPH_URL,constants.TOKEN_RECORD_QUERY, True)
+def get_lb_total():
+    # Initialize the total liquid balance
+    total_lb = 0
 
-    tokens = data['data']['tokenRecords']
-    liq_tkns = list(filter(lambda x: x['isLiquid'] == True, tokens))
-    return sum(float(t['valueExcludingOhm']) for t in liq_tkns)
+    # Iterate over the subgraph URLs and calculate the total liquid balance
+    for url in constants.SUBGRAPH_URLS:
+        data = get_data(url, constants.TOKEN_RECORD_QUERY, True)
+        tokens = data['data']['tokenRecords']
+        # Filter tokens that are marked as liquid
+        liq_tkns = list(filter(lambda x: x['isLiquid'] == True, tokens))
+        # Sum the valueExcludingOhm for the liquid tokens and add to the total
+        total_lb += sum(float(t['valueExcludingOhm']) for t in liq_tkns)
 
-def get_lb_total_arbi():
-    data = get_data(constants.ARBI_SUBGRAPH_URL,constants.TOKEN_RECORD_QUERY, True)
-
-    tokens = data['data']['tokenRecords']
-    liq_tkns = list(filter(lambda x: x['isLiquid'] == True, tokens))
-    return sum(float(t['valueExcludingOhm']) for t in liq_tkns)
-
-def get_lb_total_poly():
-    data = get_data(constants.POLY_SUBGRAPH_URL,constants.TOKEN_RECORD_QUERY, True)
-
-    tokens = data['data']['tokenRecords']
-    liq_tkns = list(filter(lambda x: x['isLiquid'] == True, tokens))
-    return sum(float(t['valueExcludingOhm']) for t in liq_tkns)
-
-def get_lb_total_ftm():
-    data = get_data(constants.FTM_SUBGRAPH_URL,constants.TOKEN_RECORD_QUERY, True)
-
-    tokens = data['data']['tokenRecords']
-    liq_tkns = list(filter(lambda x: x['isLiquid'] == True, tokens))
-    return sum(float(t['valueExcludingOhm']) for t in liq_tkns)
-
-def get_combined_lb_total():
-    return get_lb_total_eth() + get_lb_total_arbi() + get_lb_total_poly() + get_lb_total_ftm()
+    # Return the combined total liquid balance
+    return total_lb
 
 def get_current_day_lb():
-    combined_token_vals = get_combined_lb_total()
-    floating_supply_eth = get_floating_supply_eth()
-    floating_supply_arbi = get_floating_supply_arbi()
 
-    return combined_token_vals / (floating_supply_eth + floating_supply_arbi)
+    # Initialize the total floating supply
+    total_floating_supply = get_floating_supply()
 
-def get_7d_floating_supply_eth():
-    data = get_data(constants.SUBGRAPH_URL,constants.get_token_supply_7d_query())
-  # get data from highest block per day
-    data = get_records_with_highest_block(data, constants.DataType.TOKEN_SUPPLIES)
-  # create a dictionary to store the sum of supplyBalance values for each date
+    # Calculate the combined token values
+    combined_token_vals = get_lb_total()
+
+    # Calculate the current day lb
+    return combined_token_vals / total_floating_supply
+
+def get_7d_floating_supply():
+    # Define the types of tokens to exclude for calculating the floating supply
+    exclude_types_floating = ["OHM Bonds (Vesting Tokens)", "Lending"]
+
+    # Create a dictionary to store the sum of supplyBalance values for each date
     aggregated_data = {}
-    
-    # loop through the tokenSupplies array
-    for token_supply in data:
-        # check if the type is not "OHM Bonds (Vesting Tokens)"
-        if token_supply['type'] != "OHM Bonds (Vesting Tokens)" and token_supply['type'] != "Lending":
-            # convert the supplyBalance string to a float
-            supply_balance = float(token_supply['supplyBalance'])
-            date = token_supply['date']
-            # add the supplyBalance value to the aggregated data for the date
-            aggregated_data[date] = aggregated_data.get(date, 0) + supply_balance
 
-  # return the sum of supplyBalance values for each date
+    # Iterate over the subgraph URLs and calculate the 7-day floating supply
+    for url in constants.SUBGRAPH_URLS:
+        data = get_data(url, constants.get_token_supply_7d_query())
+        # Get data from the highest block per day
+        data = get_records_with_highest_block(data, constants.DataType.TOKEN_SUPPLIES)
+
+        # Loop through the tokenSupplies array
+        for token_supply in data:
+            # Check if the type is not in the exclude_types_floating list
+            if token_supply['type'] not in exclude_types_floating:
+                # Convert the supplyBalance string to a float
+                supply_balance = float(token_supply['supplyBalance'])
+                date = token_supply['date']
+                # Add the supplyBalance value to the aggregated data for the date
+                aggregated_data[date] = aggregated_data.get(date, 0) + supply_balance
+
+    # Return the sum of supplyBalance values for each date
     return aggregated_data
 
-def get_7d_floating_supply_arbi():
-    data = get_data(constants.ARBI_SUBGRAPH_URL,constants.get_token_supply_7d_query())
-  # get data from highest block per day
-    data = get_records_with_highest_block(data, constants.DataType.TOKEN_SUPPLIES)
-  # create a dictionary to store the sum of supplyBalance values for each date
-    aggregated_data = {}
-    
-    # loop through the tokenSupplies array
-    for token_supply in data:
-        # check if the type is not "OHM Bonds (Vesting Tokens)"
-        if token_supply['type'] != "OHM Bonds (Vesting Tokens)" and token_supply['type'] != "Lending":
-            # convert the supplyBalance string to a float
-            supply_balance = float(token_supply['supplyBalance'])
-            date = token_supply['date']
-            # add the supplyBalance value to the aggregated data for the date
-            aggregated_data[date] = aggregated_data.get(date, 0) + supply_balance
-
-  # return the sum of supplyBalance values for each date
-    return aggregated_data
-
-
-def get_7d_eth_token_values():
-    data = get_data(constants.SUBGRAPH_URL,constants.get_token_record_7d_query())
-  # cleanse to remove extra blocks per day
-    data = get_records_with_highest_block(data, constants.DataType.TOKEN_RECORDS)
-  # return the sum of supplyBalance values for each date
-    return aggregate_tkn_vals(data)
-
-def get_7d_arbi_token_values():
-    data = get_data(constants.ARBI_SUBGRAPH_URL,constants.get_token_record_7d_query())
-  # cleanse to remove extra blocks per day
-    data = get_records_with_highest_block(data, constants.DataType.TOKEN_RECORDS)
-  # return the sum of supplyBalance values for each date
-    return aggregate_tkn_vals(data)
-
-
-def get_7d_poly_token_values():
-    data = get_data(constants.POLY_SUBGRAPH_URL,constants.get_token_record_7d_query())
-  # cleanse to remove extra blocks per day
-    data = get_records_with_highest_block(data, constants.DataType.TOKEN_RECORDS)
-  # return the sum of supplyBalance values for each date
-    return aggregate_tkn_vals(data)
-
-
-def get_7d_ftm_token_values():
-    data = get_data(constants.FTM_SUBGRAPH_URL,constants.get_token_record_7d_query())
-  # cleanse to remove extra blocks per day
-    data = get_records_with_highest_block(data, constants.DataType.TOKEN_RECORDS)
-  # return the sum of supplyBalance values for each date
-    return aggregate_tkn_vals(data)
-
-def get_7d_agg_token_values():
-    result1 = get_7d_eth_token_values()
-    result2 = get_7d_arbi_token_values()
-    result3 = get_7d_poly_token_values()
-    result4 = get_7d_ftm_token_values()
-    # create a dictionary to store the sum of supplyBalance values for each date
+def get_7d_token_values():
+    # Create a dictionary to store the sum of token values for each date
     aggregated_result = {}
-    for res in [result1, result2, result3, result4]:
-        for date, value in res.items():
+
+    # Iterate over the subgraph URLs and calculate the 7-day token values
+    for url in constants.SUBGRAPH_URLS:
+        data = get_data(url, constants.get_token_record_7d_query())
+        # Cleanse to remove extra blocks per day
+        data = get_records_with_highest_block(data, constants.DataType.TOKEN_RECORDS)
+        # Aggregate token values for the current subgraph
+        current_result = aggregate_tkn_vals(data)
+        # Merge the current result into the aggregated result
+        for date, value in current_result.items():
             if date in aggregated_result:
                 aggregated_result[date] += value
             else:
                 aggregated_result[date] = value
-            
-    return aggregated_result
 
-def get_7d_agg_token_supplies():
-    result1 = get_7d_floating_supply_eth()
-    result2 = get_7d_floating_supply_arbi()
-    # create a dictionary to store the sum of supplyBalance values for each date
-    aggregated_result = {}
-    for res in [result1, result2]:
-        for date, value in res.items():
-            if date in aggregated_result:
-                aggregated_result[date] += value
-            else:
-                aggregated_result[date] = value
-            
+    # Return the combined 7-day token values
     return aggregated_result
 
 def get_7d_lb_sma():
   # Get the necessary values to determine Liquid Backing per Floating OHM
-    agg_token_values = get_7d_agg_token_values()
-    agg_token_supplies = get_7d_agg_token_supplies()
+    agg_token_values = get_7d_token_values()
+    agg_token_supplies = get_7d_floating_supply()
 
   # Divide Treasury Liquid Backing by Floating OHM Supply, per day 
     result = {}
@@ -311,8 +262,8 @@ def get_7d_lb_sma():
 
 def get_7d_lb_sma_raw():
   # Get the necessary values to determine Liquid Backing per Floating OHM
-    agg_values = get_7d_agg_token_values()
-    agg_token_supplies = get_7d_agg_token_supplies()
+    agg_values = get_7d_token_values()
+    agg_token_supplies = get_7d_floating_supply()
 
   # Divide Treasury Liquid Backing by Floating OHM Supply, per day 
     result = {}

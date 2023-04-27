@@ -150,8 +150,8 @@ def get_supply_data(url, include_types_circulating, include_types_floating):
 
 def get_circulating_supply():
     # Define the types of tokens to include for calculating the circulating supply
-    include_types_circulating = [TokenType.TYPE_TOTAL_SUPPLY, TokenType.TYPE_TREASURY, TokenType.TYPE_OFFSET, TokenType.TYPE_BONDS_PREMINTED,
-                                 TokenType.TYPE_BONDS_VESTING_DEPOSITS, TokenType.TYPE_BONDS_DEPOSITS, TokenType.TYPE_BOOSTED_LIQUIDITY_VAULT]
+    include_types_circulating = [TokenType.TYPE_TOTAL_SUPPLY.value, TokenType.TYPE_TREASURY.value, TokenType.TYPE_OFFSET.value, TokenType.TYPE_BONDS_PREMINTED.value,
+                                 TokenType.TYPE_BONDS_VESTING_DEPOSITS.value, TokenType.TYPE_BONDS_DEPOSITS.value, TokenType.TYPE_BOOSTED_LIQUIDITY_VAULT.value]
 
     # Initialize the total circulating supply
     total_circulating_supply = 0
@@ -168,8 +168,8 @@ def get_circulating_supply():
 
 def get_floating_supply():
     # Define the types of tokens to include for calculating the floating supply
-    include_types_floating = [TokenType.TYPE_TOTAL_SUPPLY, TokenType.TYPE_TREASURY, TokenType.TYPE_OFFSET, TokenType.TYPE_BONDS_PREMINTED,
-                              TokenType.TYPE_BONDS_VESTING_DEPOSITS, TokenType.TYPE_BONDS_DEPOSITS, TokenType.TYPE_BOOSTED_LIQUIDITY_VAULT, TokenType.TYPE_LIQUIDITY]
+    include_types_floating = [TokenType.TYPE_TOTAL_SUPPLY.value, TokenType.TYPE_TREASURY.value, TokenType.TYPE_OFFSET.value, TokenType.TYPE_BONDS_PREMINTED.value,
+                              TokenType.TYPE_BONDS_VESTING_DEPOSITS.value, TokenType.TYPE_BONDS_DEPOSITS.value, TokenType.TYPE_BOOSTED_LIQUIDITY_VAULT.value, TokenType.TYPE_LIQUIDITY.value]
 
     # Initialize the total floating supply
     total_floating_supply = 0
@@ -221,8 +221,8 @@ def get_current_day_lb():
 
 def get_7d_floating_supply():
     # Define the types of tokens to include for calculating the floating supply
-    include_types_floating = [TokenType.TYPE_TOTAL_SUPPLY, TokenType.TYPE_TREASURY, TokenType.TYPE_OFFSET, TokenType.TYPE_BONDS_PREMINTED,
-                              TokenType.TYPE_BONDS_VESTING_DEPOSITS, TokenType.TYPE_BONDS_DEPOSITS, TokenType.TYPE_BOOSTED_LIQUIDITY_VAULT, TokenType.TYPE_LIQUIDITY]
+    include_types_floating = [TokenType.TYPE_TOTAL_SUPPLY.value, TokenType.TYPE_TREASURY.value, TokenType.TYPE_OFFSET.value, TokenType.TYPE_BONDS_PREMINTED.value,
+                              TokenType.TYPE_BONDS_VESTING_DEPOSITS.value, TokenType.TYPE_BONDS_DEPOSITS.value, TokenType.TYPE_BOOSTED_LIQUIDITY_VAULT.value, TokenType.TYPE_LIQUIDITY.value]
 
     # Create a dictionary to store the sum of supplyBalance values for each date
     aggregated_data = {}

@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 from discord.ext import tasks
-from helpers import human_format, get_7d_floating_supply, get_current_day_lb, get_7d_lb_sma, get_7d_token_values, get_7d_lb_sma_raw
+from helpers import human_format, get_7d_backed_supply, get_current_day_lb, get_7d_lb_sma, get_7d_token_values, get_7d_lb_sma_raw
 import constants
 import traceback
 
@@ -15,7 +15,7 @@ class OhmLiquidBackingDiscordBot:
         self.update_lb = tasks.loop(minutes=self.updateinterval)(self._update_lb)
         self.bot.add_command(commands.Command(name='fixpresence', func=self._fixpresence, pass_context=True))
         self.bot.add_command(commands.Command(name='forceupdate', func=self._forceupdate, pass_context=True))
-        self.bot.add_command(commands.Command(name='getrawfloating', func=self._getrawfloating, pass_context=True))
+        self.bot.add_command(commands.Command(name='getrawbacked', func=self._getrawbacked, pass_context=True))
         self.bot.add_command(commands.Command(name='ping', func=self._ping, pass_context=True))
         self.bot.add_command(commands.Command(name='getrawtokens', func=self._getrawtokens, pass_context=True))
         self.bot.add_command(commands.Command(name='getrunninglb', func=self._getrunninglb, pass_context=True))
@@ -59,11 +59,11 @@ class OhmLiquidBackingDiscordBot:
                 return True
         return False
     
-    async def _getrawfloating(self, ctx):
+    async def _getrawbacked(self, ctx):
         try:
             await ctx.send("Yes ser, on it boss.")
-            data = get_7d_floating_supply()
-            embed = discord.Embed(title="7 Day Floating Supply", color=discord.Color.blue())
+            data = get_7d_backed_supply()
+            embed = discord.Embed(title="7 Day Backed Supply", color=discord.Color.blue())
             for k, v in data.items():
                 embed.add_field(name=k, value="{:,}".format(v), inline=False)
             await ctx.send(embed=embed)
@@ -134,7 +134,7 @@ class OhmLiquidBackingDiscordBot:
                 channel = self.bot.get_channel(constants.LOG_CHANNEL)
                 removed_string = "|".join([f"{k}: ${v:,.2f}" for k, v in removed])
                 await channel.send(
-                    f"<@&924860610775253043> Detected anomalous price in 7-day liquid backing, please check ohmliq!getrunninglb, ohmliq!getrawtokens, ohmliq!getrawfloating to determine outlier. Removed price(s):, {removed_string}")
+                    f"<@&924860610775253043> Detected anomalous price in 7-day liquid backing, please check ohmliq!getrunninglb, ohmliq!getrawtokens, ohmliq!getrawbacked to determine outlier. Removed price(s):, {removed_string}")
         
             return human_format(lb_val)
         except:

@@ -124,29 +124,20 @@ def get_price_gohm():
 
     return float(data["data"]["protocolMetrics"][0]["gOhmPrice"])
 
-
-def get_supply_data(url, include_types_circulating, include_types_floating):
+def get_supply_data(url, include_types):
     data = get_data(url, constants.TOKEN_SUPPLY_QUERY, True)
     tokens = data['data']['tokenSupplies']
 
     # Filter tokens based on the provided inclusion lists, if they are not None
-    if include_types_circulating is not None:
-        circulating_tokens = list(
-            filter(lambda x: x['type'] in include_types_circulating, tokens))
-        circulating_supply = sum(
-            float(tkn['supplyBalance']) for tkn in circulating_tokens)
+    if include_types is not None:
+        tokens = list(
+            filter(lambda x: x['type'] in include_types, tokens))
+        supply = sum(
+            float(tkn['supplyBalance']) for tkn in tokens)
     else:
-        circulating_supply = 0
+        supply = 0
 
-    if include_types_floating is not None:
-        floating_tokens = list(
-            filter(lambda x: x['type'] in include_types_floating, tokens))
-        floating_supply = sum(float(tkn['supplyBalance'])
-                              for tkn in floating_tokens)
-    else:
-        floating_supply = 0
-
-    return circulating_supply, floating_supply
+    return supply
 
 
 def get_circulating_supply():
@@ -159,9 +150,9 @@ def get_circulating_supply():
 
     # Iterate over the subgraph URLs and calculate the total circulating supply
     for url in constants.SUBGRAPH_URLS:
-        # Get supply data for each subgraph URL (floating supply is not needed here)
-        circulating_supply, _ = get_supply_data(
-            url, include_types_circulating, None)
+        # Get supply data for each subgraph URL
+        circulating_supply = get_supply_data(
+            url, include_types_circulating)
         total_circulating_supply += circulating_supply
 
     return total_circulating_supply
@@ -177,11 +168,26 @@ def get_floating_supply():
 
     # Iterate over the subgraph URLs and calculate the total floating supply
     for url in constants.SUBGRAPH_URLS:
-        # Get supply data for each subgraph URL (circulating supply is not needed here)
-        _, floating_supply = get_supply_data(url, None, include_types_floating)
+        # Get supply data for each subgraph URL
+        floating_supply = get_supply_data(url, include_types_floating)
         total_floating_supply += floating_supply
 
     return total_floating_supply
+
+def get_backed_supply():
+    # Define the types of tokens to include for calculating the backed supply
+    include_types_backed = [TokenType.TYPE_TOTAL_SUPPLY.value, TokenType.TYPE_TREASURY.value, TokenType.TYPE_OFFSET.value, TokenType.TYPE_BONDS_PREMINTED.value, TokenType.TYPE_BONDS_VESTING_DEPOSITS.value, TokenType.TYPE_BONDS_DEPOSITS.value, TokenType.TYPE_BOOSTED_LIQUIDITY_VAULT.value, TokenType.TYPE_LIQUIDITY.value, TokenType.TYPE_LENDING.value]
+
+    # Initialize the total backed supply
+    total_backed_supply = 0
+
+    # Iterate over the subgraph URLs and calculate the total backed supply
+    for url in constants.SUBGRAPH_URLS:
+        # Get supply data for each subgraph URL (circulating supply is not needed here)
+        backed_supply = get_supply_data(url, include_types_backed)
+        total_backed_supply += backed_supply
+
+    return total_backed_supply
 
 
 def get_raw_index():
@@ -220,29 +226,38 @@ def get_token_multiplier(token):
 
 def get_current_day_lb():
 
-    # Initialize the total floating supply
-    total_floating_supply = get_floating_supply()
+    # Initialize the total backed supply
+    total_backed_supply = get_backed_supply()
 
     # Calculate the combined token values
     combined_token_vals = get_lb_total()
 
     # Calculate the current day lb
-    return combined_token_vals / total_floating_supply
+    return combined_token_vals / total_backed_supply
 
+def check_errors(data):
+    if 'errors' in data:
+        return True
+    return False
 
-def get_7d_floating_supply():
-    # Define the types of tokens to include for calculating the floating supply
-    include_types_floating = [TokenType.TYPE_TOTAL_SUPPLY.value, TokenType.TYPE_TREASURY.value, TokenType.TYPE_OFFSET.value, TokenType.TYPE_BONDS_PREMINTED.value,
-                              TokenType.TYPE_BONDS_VESTING_DEPOSITS.value, TokenType.TYPE_BONDS_DEPOSITS.value, TokenType.TYPE_BOOSTED_LIQUIDITY_VAULT.value, TokenType.TYPE_LIQUIDITY.value]
+def get_7d_backed_supply():
+    # Define the types of tokens to include for calculating the backed supply
+    include_types_backed = [TokenType.TYPE_TOTAL_SUPPLY.value, TokenType.TYPE_TREASURY.value, TokenType.TYPE_OFFSET.value, TokenType.TYPE_BONDS_PREMINTED.value, TokenType.TYPE_BONDS_VESTING_DEPOSITS.value, TokenType.TYPE_BONDS_DEPOSITS.value, TokenType.TYPE_BOOSTED_LIQUIDITY_VAULT.value, TokenType.TYPE_LIQUIDITY.value, TokenType.TYPE_LENDING.value]
 
     # Create a dictionary to store the sum of supplyBalance values for each date
     aggregated_data = {}
     # Variable to store the highest date from the first iteration (Mainnet)
     highest_date = None
 
-    # Iterate over the subgraph URLs and calculate the 7-day floating supply for each network
+    # Iterate over the subgraph URLs and calculate the 7-day backed supply for each network
     for index, url in enumerate(constants.SUBGRAPH_URLS):
         data = get_data(url, constants.get_token_supply_7d_query())
+
+        # Subgraph sometimes errors, print and skip
+        if check_errors(data):
+            print(f"Error fetching data from {url}")
+            continue
+
         # Get data from the highest block per day to eliminate partial indexing
         data = get_records_with_highest_block(
             data, constants.DataType.TOKEN_SUPPLIES)
@@ -251,8 +266,8 @@ def get_7d_floating_supply():
         current_dates = set()
         # Loop through the tokenSupplies array
         for token_supply in data:
-            # Check if the type is in the include_types_floating list above
-            if token_supply['type'] in include_types_floating:
+            # Check if the type is in the include_types_backed list above
+            if token_supply['type'] in include_types_backed:
                 # Convert the supplyBalance string to a float and check if gOHM for multiplier
                 supply_balance = float(
                     token_supply['supplyBalance']) * get_token_multiplier(token_supply['tokenAddress'])
@@ -299,11 +314,11 @@ def get_7d_token_values():
 
 
 def get_7d_lb_sma():
-  # Get the necessary values to determine Liquid Backing per Floating OHM
+  # Get the necessary values to determine Liquid Backing per Backed OHM
     agg_token_values = get_7d_token_values()
-    agg_token_supplies = get_7d_floating_supply()
+    agg_token_supplies = get_7d_backed_supply()
 
-  # Divide Treasury Liquid Backing by Floating OHM Supply, per day
+  # Divide Treasury Liquid Backing by Backed OHM Supply, per day
     result = {}
     for currdate, value1 in agg_token_values.items():
         try:
@@ -321,11 +336,11 @@ def get_7d_lb_sma():
 
 
 def get_7d_lb_sma_raw():
-  # Get the necessary values to determine Liquid Backing per Floating OHM
+  # Get the necessary values to determine Liquid Backing per Backed OHM
     agg_values = get_7d_token_values()
-    agg_token_supplies = get_7d_floating_supply()
+    agg_token_supplies = get_7d_backed_supply()
 
-  # Divide Treasury Liquid Backing by Floating OHM Supply, per day
+  # Divide Treasury Liquid Backing by Backed OHM Supply, per day
     result = {}
     for currdate, value1 in agg_values.items():
         try:

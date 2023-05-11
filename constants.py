@@ -15,7 +15,7 @@ PRICE_UPDATE_INTERVAL = 20 # in minutes
 GENERIC_UPDATE_INTERVAL = 10 # in minutes
 LB_UPDATE_INTERVAL = 720 # in minutes
 INDEX_UPDATE_INTERVAL = 360 # in minutes
-ETH_SUBGRAPH_URL = 'https://gateway.thegraph.com/api/[api-key]/deployments/id/QmPCuWLfoH33u699BFwfDEcqaSedhyZpVNk48pQDaS2Kmy'
+ETH_SUBGRAPH_URL = 'https://gateway.thegraph.com/api/[api-key]/deployments/id/DTcDcUSBRJjz9NeoK5VbXCVzYbRTyuBwdPUqMi8x32pY'
 SUBGRAPH_URLS = (
     ETH_SUBGRAPH_URL,  # Ethereum, update above
     'https://api.thegraph.com/subgraphs/name/olympusdao/protocol-metrics-arbitrum',  # Arbitrum
@@ -39,6 +39,7 @@ SCAMMER_KEYWORDS = ['mod', 'help desk', 'support', 'dev', 'mee6', 'shaft', 'relw
 EXCLUDE_IDS= [828736415013404702, 526240486822903818, 855229180567355422, 894321349210820618, 215990494197448704, 883022147742752820,
               804035483494645771, 299261433961512960, 383712533300641793, 407997042816974848, 220200518834716673, 915007255655612496,
               159985870458322944, 985951550667128863, 470723870270160917]
+EXCLUDE_COMM_IDS = []
 ADMIN_ROLE = "Scholars"
 INTERN_ROLE = "Intern"
 GRASSHOPPER = "Grasshoppers"

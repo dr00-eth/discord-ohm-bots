@@ -169,7 +169,7 @@ class SentinelDiscordBot:
         for guild in self.bot.guilds:
             found_members = []
             for member in guild.members:
-                if member.id in constants.EXCLUDE_IDS:
+                if member.id in constants.EXCLUDE_IDS or member.id in constants.EXCLUDE_COMM_IDS:
                     continue
                 for keyword in constants.SCAMMER_KEYWORDS:
                     if keyword in member.name or (member.nick and keyword in member.nick):

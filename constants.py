@@ -15,7 +15,7 @@ PRICE_UPDATE_INTERVAL = 20 # in minutes
 GENERIC_UPDATE_INTERVAL = 10 # in minutes
 LB_UPDATE_INTERVAL = 720 # in minutes
 INDEX_UPDATE_INTERVAL = 360 # in minutes
-ETH_SUBGRAPH_URL = 'https://gateway.thegraph.com/api/[api-key]/deployments/id/DTcDcUSBRJjz9NeoK5VbXCVzYbRTyuBwdPUqMi8x32pY'
+ETH_SUBGRAPH_URL = 'https://gateway.thegraph.com/api/[api-key]/deployments/id/QmfC7nn4agkCjpgsjVdcCkKiKoGiu97yQTQSG1z7EaNnxd'
 SUBGRAPH_URLS = (
     ETH_SUBGRAPH_URL,  # Ethereum, update above
     'https://api.thegraph.com/subgraphs/name/olympusdao/protocol-metrics-arbitrum',  # Arbitrum

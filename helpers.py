@@ -77,7 +77,6 @@ def get_records_with_highest_block(data, data_type):
 
     if data_type == constants.DataType.TOKEN_SUPPLIES:
         data_records = data['data'][constants.DataType.TOKEN_SUPPLIES.value]
-
     records_by_date = {}
     for record in data_records:
         date = record['date']
@@ -126,14 +125,14 @@ def get_price_gohm():
 
 def get_supply_data(url, include_types):
     data = get_data(url, constants.TOKEN_SUPPLY_QUERY, True)
-    tokens = data['data']['tokenSupplies']
+    tokens = get_records_with_highest_block(data, constants.DataType.TOKEN_SUPPLIES)
 
     # Filter tokens based on the provided inclusion lists, if they are not None
     if include_types is not None:
         tokens = list(
             filter(lambda x: x['type'] in include_types, tokens))
         supply = sum(
-            float(tkn['supplyBalance']) for tkn in tokens)
+            float(tkn['supplyBalance']) * get_token_multiplier(tkn['tokenAddress']) for tkn in tokens)
     else:
         supply = 0
 
@@ -185,6 +184,7 @@ def get_backed_supply():
     for url in constants.SUBGRAPH_URLS:
         # Get supply data for each subgraph URL (circulating supply is not needed here)
         backed_supply = get_supply_data(url, include_types_backed)
+
         total_backed_supply += backed_supply
 
     return total_backed_supply
@@ -204,9 +204,11 @@ def get_lb_total():
     # Iterate over the subgraph URLs and calculate the total liquid balance
     for url in constants.SUBGRAPH_URLS:
         data = get_data(url, constants.TOKEN_RECORD_QUERY, True)
-        tokens = data['data']['tokenRecords']
+        # Cleanse to remove extra blocks per day
+        data = get_records_with_highest_block(
+            data, constants.DataType.TOKEN_RECORDS)
         # Filter tokens that are marked as liquid
-        liq_tkns = list(filter(lambda x: x['isLiquid'] == True, tokens))
+        liq_tkns = list(filter(lambda x: x['isLiquid'] == True, data))
         # Sum the valueExcludingOhm for the liquid tokens and add to the total
         total_lb += sum(float(t['valueExcludingOhm']) for t in liq_tkns)
 

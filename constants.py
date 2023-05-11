@@ -23,9 +23,9 @@ SUBGRAPH_URLS = (
     'https://api.thegraph.com/subgraphs/name/olympusdao/protocol-metrics-fantom'  # Fantom
 )
 BLOCK_REQUEST_QUERY = {"query": "{ tokenRecords(first: 1, orderBy: block, orderDirection: desc) { block }}"}
-TOKEN_SUPPLY_QUERY = "{{tokenSupplies( where: {{block: \"{}\"}}) {{ type supplyBalance }}}}"
+TOKEN_SUPPLY_QUERY = "{{tokenSupplies( where: {{block: \"{}\"}}) {{ block type date supplyBalance tokenAddress source sourceAddress pool poolAddress }}}}"
 TOKEN_SUPPLY_7D_QUERY = get_token_supply_7d_query()
-TOKEN_RECORD_QUERY = "{{tokenRecords( where: {{block: \"{}\"}}) {{ value valueExcludingOhm tokenAddress token isLiquid category multiplier }}}}"
+TOKEN_RECORD_QUERY = "{{tokenRecords( where: {{block: \"{}\"}}) {{ block value date valueExcludingOhm tokenAddress token isLiquid category multiplier }}}}"
 TOKEN_RECORD_7D_QUERY = get_token_record_7d_query()
 INDEX_PRICE_QUERY = "{{protocolMetrics(first: 1, where: {{block: \"{}\"}}) {{ currentIndex ohmPrice gOhmPrice }}}}"
 STREAK_MESSAGE_SEQUENCE = ['earth', 'fire', 'wind', 'water', 'heart', 'go planet']
